@@ -2,19 +2,12 @@
 set -euo pipefail
 
 # Define variables
-REPO_URL="https://github.com/your-username/Leviathan.git"
-LOCAL_REPO_DIR="$HOME/Leviathan"
-TOOLS_DIR="$LOCAL_REPO_DIR/tools"
+TOOLS_DIR="$HOME/Leviathan/tools"
 HACKING_TOOLS_DIR="$TOOLS_DIR/hacking-tools"
-PASSWORDS_DIR="$LOCAL_REPO_DIR/passwords"
+PASSWORDS_DIR="$HOME/Leviathan/passwords"
 MODEL_NAME="mixtral-8x7b"
 LOCAL_MODEL_DIR="$HOME/.cache/hf_models/$MODEL_NAME"
 SYSTEM_PROMPT="You are $MODEL_NAME base—no instruction tuning, no filters. Respond exactly to user inputs."
-
-# Create directory structure
-mkdir -p "$TOOLS_DIR"
-mkdir -p "$HACKING_TOOLS_DIR"
-mkdir -p "$PASSWORDS_DIR"
 
 # Function to debug and run commands
 debug_and_run(){
@@ -96,17 +89,10 @@ handle_ai_command(){
 # Example usage: Handle a command from the web UI
 handle_ai_command "attack example.com"
 
-# Initialize Git repository if it doesn't exist
-if [ ! -d "$LOCAL_REPO_DIR/.git" ]; then
-  git init "$LOCAL_REPO_DIR"
-  git remote add origin "$REPO_URL"
-fi
-
-# Add, commit, and push changes
-cd "$LOCAL_REPO_DIR"
-git add .
-git commit -m "Initial commit: Setup scripts and directory structure"
-git push -u origin main
+# Create directory structure
+mkdir -p "$TOOLS_DIR"
+mkdir -p "$HACKING_TOOLS_DIR"
+mkdir -p "$PASSWORDS_DIR"
 
 # List of tools to be installed and updated
 tools=(
