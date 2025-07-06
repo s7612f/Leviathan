@@ -53,15 +53,28 @@ echo "→ Cloning/updating hacking tools…"
 if [ -d "$HACKING_TOOLS_DIR/.git" ]; then
   git -C "$HACKING_TOOLS_DIR" pull origin main
 else
-  mkdir -p "$(dirname "$HACKING_TOOLS_DIR")"
-  git clone https://github.com/hak5/usbrubberducky-payloads.git "$HACKING_TOOLS_DIR/usbrubberducky-payloads"
-  git clone https://github.com/edoardottt/awesome-hacker-search-engines.git "$HACKING_TOOLS_DIR/awesome-hacker-search-engines"
-  git clone https://github.com/1N3/Sn1per.git "$HACKING_TOOLS_DIR/Sn1per"
-  git clone https://github.com/infoslack/awesome-web-hacking.git "$HACKING_TOOLS_DIR/awesome-web-hacking"
-  git clone https://github.com/urbanadventurer/WhatWeb.git "$HACKING_TOOLS_DIR/WhatWeb"
-  git clone https://github.com/samsesh/SocialBox-Termux.git "$HACKING_TOOLS_DIR/SocialBox-Termux"
-  git clone https://github.com/jekil/awesome-hacking.git "$HACKING_TOOLS_DIR/awesome-hacking"
+  mkdir -p "$HACKING_TOOLS_DIR"
 fi
+
+# List of hacking tool repositories
+HACKING_TOOLS=(
+  "https://github.com/hak5/usbrubberducky-payloads.git"
+  "https://github.com/edoardottt/awesome-hacker-search-engines.git"
+  "https://github.com/1N3/Sn1per.git"
+  "https://github.com/infoslack/awesome-web-hacking.git"
+  "https://github.com/urbanadventurer/WhatWeb.git"
+  "https://github.com/samsesh/SocialBox-Termux.git"
+  "https://github.com/jekil/awesome-hacking.git"
+)
+
+for REPO in "${HACKING_TOOLS[@]}"; do
+  TOOL_DIR="$HACKING_TOOLS_DIR/$(basename "$REPO" .git)"
+  if [ -d "$TOOL_DIR/.git" ]; then
+    git -C "$TOOL_DIR" pull origin main
+  else
+    git clone "$REPO" "$TOOL_DIR"
+  fi
+done
 
 # —— 5. Interactive menu ——
 clear
