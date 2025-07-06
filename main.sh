@@ -65,9 +65,6 @@ fi
 
 # —— 5. Interactive menu ——
 clear
-cat <<'EOF'
-      __              _       __  __                  / /   ___ _   __(_)___ _/ /_/ /_  ____ _____    / /   / _ \ | / / / __ `/ __/ __ \/ __ `/ __ \  / /___/  __/ |/ / / /_/ / /_/ / / / /_/ / / / / /_____/\___/|___/_/\__,_/\__/_/ /_/\__,_/_/ /_/                                                    Welcome to Leviathan AI  EOF
-
 echo -e "\e[32m"
 echo "Select interface:"
 echo " 1) Mixtral CLI (model: dolphin-2.5-mixtral-8x7b)"
