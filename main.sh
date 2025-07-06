@@ -86,6 +86,9 @@ for REPO in "${HACKING_TOOLS[@]}"; do
   TOOL_DIR="$HACKING_TOOLS_DIR/$(basename "$REPO" .git)"
   if [ -d "$TOOL_DIR/.git" ]; then
     git -C "$TOOL_DIR" pull origin main
+    if [ $? -ne 0 ]; then
+      git -C "$TOOL_DIR" pull origin master
+    fi
   else
     git clone "$REPO" "$TOOL_DIR"
   fi
