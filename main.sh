@@ -40,6 +40,7 @@ fi
 source venv/bin/activate
 pip install --upgrade pip
 if [ -f requirements.txt ]; then
+  echo "→ Installing Web-UI Python requirements…"
   pip install -r requirements.txt
 fi
 
@@ -53,7 +54,7 @@ read -p "Enter choice [1-2]: " choice
 case "$choice" in
   1)
     echo "→ Launching Dolphin CLI…"
-    ollama shell dolphin-mixtral:latest
+    ollama run dolphin-mixtral:latest
     ;;
   2)
     echo "→ Starting Open-WebUI…"
