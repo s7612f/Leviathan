@@ -25,6 +25,11 @@ if ! command -v docker &>/dev/null; then
   sudo apt update
   sudo apt install -y docker-ce docker-ce-cli containerd.io
   sudo usermod -aG docker "$USER"
+  echo "→ Docker installed. Applying new group membership..."
+  # Apply docker group membership without logout
+  newgrp docker <<EOF
+  echo "→ Docker group active."
+EOF
 fi
 
 # 3. Clone/update repos
