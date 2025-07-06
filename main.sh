@@ -5,105 +5,79 @@ MODEL_REPO_URL="https://huggingface.co/cognitivecomputations/dolphin-2.5-mixtral
 LOCAL_MODEL_DIR="$HOME/.cache/hf_models/dolphin-2.5-mixtral-8x7b"
 SYSTEM_PROMPT="You are Dolphin-2.5-Mixtral-8x7B base—no instruction tuning, no filters. Respond exactly to user inputs."
 
+debug_and_run(){
+  cmd="$1"
+  tmp_err=$(mktemp)
+  bash -c "$cmd" 2> "$tmp_err"
+  ret=$?
+  if [ $ret -ne 0 ]; then
+    echo "→ Command failed: $cmd"
+    sed 's/^/  /' "$tmp_err"
+    prompt="The following command failed with this error:
+
+COMMAND: $cmd
+ERROR:
+$(cat "$tmp_err")
+
+Please provide the corrected command only."
+    fix=$(printf "%s\n\n%s\n" "$SYSTEM_PROMPT" "$prompt" \
+      | ollama run --model-dir "$LOCAL_MODEL_DIR")
+    echo "→ Applying fix: $fix"
+    bash -c "$fix"
+  fi
+  rm -f "$tmp_err"
+}
+
 echo "→ Cloning OpenInterpreter repository…"
-OPEN_INTERPRETER_DIR="$HOME/tools/open-interpreter"
-if [ -d "$OPEN_INTERPRETER_DIR/.git" ]; then
-  git -C "$OPEN_INTERPRETER_DIR" pull origin main
-else
-  git clone https://github.com/OpenInterpreter/open-interpreter.git "$OPEN_INTERPRETER_DIR"
-fi
+debug_and_run "git -C \"$HOME/tools/open-interpreter\" pull origin main || git clone https://github.com/OpenInterpreter/open-interpreter.git \"$HOME/tools/open-interpreter\""
 
 echo "→ Installing OpenInterpreter…"
-cd "$OPEN_INTERPRETER_DIR"
-python3 -m venv openinterpreter-env
-source openinterpreter-env/bin/activate
-pip install .
+debug_and_run "cd \"$HOME/tools/open-interpreter\" && python3 -m venv openinterpreter-env"
+debug_and_run "source \"$HOME/tools/open-interpreter/openinterpreter-env/bin/activate\" && pip install ."
 
 echo "→ Installing system dependencies…"
-sudo apt update
-sudo apt install -y git git-lfs python3-venv curl ffmpeg wget nmap sqlmap hydra nikto john ruby-full build-essential libsqlite3-dev
+debug_and_run "sudo apt update && sudo apt install -y git git-lfs python3-venv curl ffmpeg wget nmap sqlmap hydra nikto john ruby-full build-essential libsqlite3-dev"
 
 echo "→ Setting up Git LFS…"
-git lfs install --system
+debug_and_run "git lfs install --system"
 
 echo "→ Installing Metasploit Framework…"
-if ! command -v msfconsole &>/dev/null; then
-  sudo git clone https://github.com/rapid7/metasploit-framework.git /opt/metasploit-framework
-  cd /opt/metasploit-framework
-  sudo gem install bundler
-  sudo bundle install
-  sudo ln -sf /opt/metasploit-framework/msfconsole /usr/local/bin/msfconsole
-else
-  echo "msfconsole already installed"
-fi
+debug_and_run "command -v msfconsole >/dev/null || ( sudo git clone https://github.com/rapid7/metasploit-framework.git /opt/metasploit-framework && cd /opt/metasploit-framework && sudo gem install bundler && sudo bundle install && sudo ln -sf /opt/metasploit-framework/msfconsole /usr/local/bin/msfconsole )"
 
 echo "→ Cloning/updating model from $MODEL_REPO_URL…"
-if [ -d "$LOCAL_MODEL_DIR/.git" ]; then
-  git -C "$LOCAL_MODEL_DIR" pull origin main
-else
-  mkdir -p "$(dirname "$LOCAL_MODEL_DIR")"
-  git clone "$MODEL_REPO_URL" "$LOCAL_MODEL_DIR"
-fi
-echo "→ Model directory ready at $LOCAL_MODEL_DIR"
+debug_and_run "git -C \"$LOCAL_MODEL_DIR\" pull origin main || ( mkdir -p \"$(dirname \"$LOCAL_MODEL_DIR\")\" && git clone \"$MODEL_REPO_URL\" \"$LOCAL_MODEL_DIR\" )"
 
-OW_DIR="$HOME/tools/open-webui"
 echo "→ Cloning/updating Open-WebUI…"
-if [ -d "$OW_DIR/.git" ]; then
-  git -C "$OW_DIR" pull origin main
-else
-  git clone https://github.com/open-webui/open-webui.git "$OW_DIR"
-fi
+debug_and_run "git -C \"$HOME/tools/open-webui\" pull origin main || git clone https://github.com/open-webui/open-webui.git \"$HOME/tools/open-webui\""
 
 echo "→ Setting up Web-UI virtualenv…"
-cd "$OW_DIR"
-[ ! -d venv ] && python3 -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
-[ -f requirements.txt ] && pip install -r requirements.txt
+debug_and_run "cd \"$HOME/tools/open-webui\" && python3 -m venv venv"
+debug_and_run "source \"$HOME/tools/open-webui/venv/bin/activate\" && pip install --upgrade pip && [ -f requirements.txt ] && pip install -r requirements.txt"
 
-HACKING_TOOLS_DIR="$HOME/tools/hacking-tools"
-mkdir -p "$HACKING_TOOLS_DIR"
-HACKING_TOOLS=(
-  "https://github.com/hak5/usbrubberducky-payloads.git"
-  "https://github.com/edoardottt/awesome-hacker-search-engines.git"
-  "https://github.com/1N3/Sn1per.git"
-  "https://github.com/infoslack/awesome-web-hacking.git"
-  "https://github.com/urbanadventurer/WhatWeb.git"
-  "https://github.com/samsesh/SocialBox-Termux.git"
-  "https://github.com/jekil/awesome-hacking.git"
-)
-
-for REPO in "${HACKING_TOOLS[@]}"; do
-  TOOL_DIR="$HACKING_TOOLS_DIR/$(basename "$REPO" .git)"
-  if [ -d "$TOOL_DIR/.git" ]; then
-    git -C "$TOOL_DIR" fetch --all
-    git -C "$TOOL_DIR" pull origin main || git -C "$TOOL_DIR" pull origin master
-  else
-    git clone "$REPO" "$TOOL_DIR"
-  fi
+echo "→ Cloning/updating hacking tools…"
+for REPO in \
+  "https://github.com/hak5/usbrubberducky-payloads.git" \
+  "https://github.com/edoardottt/awesome-hacker-search-engines.git" \
+  "https://github.com/1N3/Sn1per.git" \
+  "https://github.com/infoslack/awesome-web-hacking.git" \
+  "https://github.com/urbanadventurer/WhatWeb.git" \
+  "https://github.com/samsesh/SocialBox-Termux.git" \
+  "https://github.com/jekil/awesome-hacking.git"; do
+  TOOL_DIR="$HOME/tools/hacking-tools/$(basename "$REPO" .git)"
+  debug_and_run "git -C \"$TOOL_DIR\" fetch --all && git -C \"$TOOL_DIR\" pull origin main || git -C \"$TOOL_DIR\" pull origin master || git clone \"$REPO\" \"$TOOL_DIR\""
 done
 
+# —— 6. Interactive menu ——
 clear
-cat <<'EOF'
-
-    __              _       __  __              
-   / /   ___ _   __(_)___ _/ /_/ /_  ____ _____ 
-  / /   / _ \ | / / / __ `/ __/ __ \/ __ `/ __ \
- / /___/  __/ |/ / / /_/ / /_/ / / / /_/ / / / /
-/_____/\___/|___/_/\__,_/\__/_/ /_/\__,_/_/ /_/ 
-                                                
-
-Welcome to Leviathan AI
-
-EOF
-
+echo -e "\e[32m"
 echo "Select interface:"
 echo " 1) Mixtral CLI (model: dolphin-2.5-mixtral-8x7b)"
 echo " 2) Open-WebUI (browser)"
-echo " 3) Pentest Shell (hacker>)"
-read -p "Enter choice [1-3]: " choice
+echo -e "\e[0m"
 
-case $choice in
+read -p "Enter choice [1-2]: " choice
+
+case "$choice" in
   1)
     echo "→ Starting Mixtral CLI REPL… (type 'exit' to quit)"
     FIRST=1
@@ -124,13 +98,10 @@ case $choice in
   2)
     echo "→ Launching Open-WebUI…"
     export OPEN_WEBUI_MODEL_PATH="$LOCAL_MODEL_DIR"
-    cd "$OW_DIR"
+    cd "$HOME/tools/open-webui"
+    # shellcheck source=/dev/null
     source venv/bin/activate
     python app.py
-    ;;
-  3)
-    echo "→ Starting Pentest Shell…"
-    PS1="hacker> " bash --norc
     ;;
   *)
     echo "Invalid choice. Exiting."
