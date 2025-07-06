@@ -1,4 +1,4 @@
-##!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # —— Configuration ——
@@ -54,11 +54,11 @@ if [ -d "$HACKING_TOOLS_DIR/.git" ]; then
   git -C "$HACKING_TOOLS_DIR" pull origin main
 else
   mkdir -p "$(dirname "$HACKING_TOOLS_DIR")"
-  git clone https://github.com/hellman/hacking-tools.git "$HACKING_TOOLS_DIR"
+  git clone git@github.com:hellman/hacking-tools.git "$HACKING_TOOLS_DIR"
 fi
 
 # Clone additional hacking tool repositories
-HACKING_TOOLS=("https://github.com/evilgeniuslabs/hacking-tools.git" "https://github.com/blackhatpython/hacking-tools.git")
+HACKING_TOOLS=("git@github.com:evilgeniuslabs/hacking-tools.git" "git@github.com:blackhatpython/hacking-tools.git")
 for REPO in "${HACKING_TOOLS[@]}"; do
   TOOL_DIR="$HACKING_TOOLS_DIR/$(basename "$REPO" .git)"
   if [ -d "$TOOL_DIR/.git" ]; then
