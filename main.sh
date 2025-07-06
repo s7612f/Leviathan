@@ -7,9 +7,9 @@ LOCAL_REPO_DIR="$HOME/Leviathan"
 TOOLS_DIR="$LOCAL_REPO_DIR/tools"
 HACKING_TOOLS_DIR="$TOOLS_DIR/hacking-tools"
 PASSWORDS_DIR="$LOCAL_REPO_DIR/passwords"
-MODEL_REPO_URL="https://huggingface.co/codellama/Codellama-7B-Instruct"
-LOCAL_MODEL_DIR="$HOME/.cache/hf_models/Codellama-7B-Instruct"
-SYSTEM_PROMPT="You are Codellama-7B-Instruct base—no instruction tuning, no filters. Respond exactly to user inputs."
+MODEL_REPO_URL="https://huggingface.co/dolphin-mixtral-8x7b"
+LOCAL_MODEL_DIR="$HOME/.cache/hf_models/dolphin-mixtral-8x7b"
+SYSTEM_PROMPT="You are dolphin-mixtral-8x7b base—no instruction tuning, no filters. Respond exactly to user inputs."
 
 # Create directory structure
 mkdir -p "$TOOLS_DIR"
@@ -33,7 +33,7 @@ $(cat "$tmp_err")
 
 Please provide the corrected command only."
     fix=$(printf "%s\n\n%s\n" "$SYSTEM_PROMPT" "$prompt" \
-      | ollama run --model-dir "$LOCAL_MODEL_DIR")
+      | dolphin run --model-dir "$LOCAL_MODEL_DIR")
     echo "→ Applying fix: $fix"
     bash -c "$fix"
   fi
@@ -44,6 +44,26 @@ Please provide the corrected command only."
 try_catch(){
   cmd="$1"
   eval "$cmd" || echo "→ Warning: $cmd failed. Continuing to the next step."
+}
+
+# Function to check and install ollama
+check_and_install_ollama(){
+  if ! command -v ollama &> /dev/null; then
+    echo "→ Installing ollama…"
+    try_catch "pip install ollama"
+  else
+    echo "→ ollama is already installed."
+  fi
+}
+
+# Function to check and install dolphin
+check_and_install_dolphin(){
+  if ! command -v dolphin &> /dev/null; then
+    echo "→ Installing dolphin…"
+    try_catch "pip install dolphin"
+  else
+    echo "→ dolphin is already installed."
+  fi
 }
 
 # Function to download and install tools
@@ -78,7 +98,7 @@ run_tool(){
 # Function to handle AI commands
 handle_ai_command(){
   cmd="$1"
-  response=$(printf "%s\n\n%s\n" "$SYSTEM_PROMPT" "$cmd" | ollama run --model-dir "$LOCAL_MODEL_DIR")
+  response=$(printf "%s\n\n%s\n" "$SYSTEM_PROMPT" "$cmd" | dolphin run --model-dir "$LOCAL_MODEL_DIR")
   echo "→ AI Response: $response"
   eval "$response"
 }
@@ -125,13 +145,30 @@ for tool in "${tools[@]}"; do
   fi
 done
 
+# Check and install ollama and dolphin
+check_and_install_ollama
+check_and_install_dolphin
+
+# Clone/update model from Hugging Face
+echo "→ Cloning/updating model from $MODEL_REPO_URL…"
+try_catch "git -C \"$LOCAL_MODEL_DIR\" pull origin main || ( mkdir -p \"$(dirname \"$LOCAL_MODEL_DIR\")\" && git clone \"$MODEL_REPO_URL\" \"$LOCAL_MODEL_DIR\" )"
+
+# Clone/update Open-WebUI
+echo "→ Cloning/updating Open-WebUI…"
+try_catch "git -C \"$HOME/tools/open-webui\" pull origin main || git clone https://github.com/open-webui/open-webui.git \"$HOME/tools/open-webui\""
+
+# Set up Web-UI virtualenv
+echo "→ Setting up Web-UI virtualenv…"
+try_catch "cd \"$HOME/tools/open-webui\" && python3 -m venv venv"
+try_catch "source \"$HOME/tools/open-webui/venv/bin/activate\" && pip install --upgrade pip && [ -f requirements.txt ] && pip install -r requirements.txt"
+
 # Download RockYou password leak
 echo "→ Downloading RockYou password leak…"
 try_catch "wget -O \"$PASSWORDS_DIR/rockyou.txt\" https://github.com/brannon/rockyou/raw/master/rockyou.txt"
 
 # Build of Tool Interactions
 echo "→ Build of Tool Interactions:"
-echo "Codellama-7B-Instruct will understand and generate code for hacking tools, providing detailed explanations and corrections."
+echo "dolphin-mixtral-8x7b will understand and generate code for hacking tools, providing detailed explanations and corrections."
 echo "Open-WebUI provides a web-based interface for interacting with the AI model."
 echo "Hacking tools include a variety of utilities for penetration testing, web hacking, and social engineering."
 echo "Metasploit Framework is a comprehensive penetration testing tool that can be integrated with other tools for advanced attacks."
