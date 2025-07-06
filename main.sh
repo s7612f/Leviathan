@@ -25,7 +25,8 @@ sudo apt install -y git git-lfs python3-venv curl ffmpeg wget nmap sqlmap hydra 
 
 echo "→ Installing Metasploit Framework…"
 if ! command -v msfconsole &>/dev/null; then
-  curl https://raw.githubusercontent.com/rapid7/metasploit-framework/master/msfinstall | sudo bash
+  curl -fsSL https://raw.githubusercontent.com/rapid7/metasploit-framework/master/msfinstall \
+    | sudo bash
 else
   echo "msfconsole already installed"
 fi
