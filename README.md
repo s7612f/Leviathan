@@ -28,10 +28,9 @@ Leviathan AI is an all-in-one, AI-powered security workbench. It combines a powe
 
 Run this one-liner from your home directory to wipe any previous setup and get the latest scripts:
 
-```bash
 cd ~ \
-&& rm -rf Leviathan ~/tools/open-webui ~/tools/open-interpreter ~/tools/hacking-tools ~/.cache/hf_models/dolphin-2.5-mixtral-8x7b \
-&& git clone git@github.com:s7612f/Leviathan.git ~/Leviathan \
+&& rm -rf Leviathan 
+&& git clone https://github.com/s7612f/Leviathan.git ~/Leviathan \
 && cd ~/Leviathan \
-&& chmod +x main.sh \
+&& chmod +x main.sh install.sh install-lite.sh \
 && ./main.sh
