@@ -28,35 +28,40 @@ Please provide the corrected command only."
   rm -f "$tmp_err"
 }
 
+try_catch(){
+  cmd="$1"
+  eval "$cmd" || echo "→ Warning: $cmd failed. Continuing to the next step."
+}
+
 echo "→ Checking network connectivity…"
-debug_and_run "ping -c 4 8.8.8.8"
-debug_and_run "ping -c 4 google.com"
+try_catch "ping -c 4 8.8.8.8"
+try_catch "ping -c 4 google.com"
 
 echo "→ Checking DNS configuration…"
-debug_and_run "cat /etc/resolv.conf"
-debug_and_run "nslookup google.com"
+try_catch "cat /etc/resolv.conf"
+try_catch "nslookup google.com"
 
 echo "→ Testing internet connection…"
-debug_and_run "curl -Is http://www.baeldung.com | head -n 1"
+try_catch "curl -Is http://www.baeldung.com | head -n 1"
 
 echo "→ Installing system dependencies…"
-debug_and_run "sudo apt update && sudo apt install -y git git-lfs python3-venv curl ffmpeg wget nmap sqlmap hydra nikto john ruby-full build-essential libsqlite3-dev"
+try_catch "sudo apt update && sudo apt install -y git git-lfs python3-venv curl ffmpeg wget nmap sqlmap hydra nikto john ruby-full build-essential libsqlite3-dev"
 
 echo "→ Setting up Git LFS…"
-debug_and_run "git lfs install --system"
+try_catch "git lfs install --system"
 
 echo "→ Installing Metasploit Framework…"
-debug_and_run "command -v msfconsole >/dev/null || ( sudo git clone https://github.com/rapid7/metasploit-framework.git /opt/metasploit-framework && cd /opt/metasploit-framework && sudo gem install bundler && sudo bundle install && sudo ln -sf /opt/metasploit-framework/msfconsole /usr/local/bin/msfconsole )"
+try_catch "command -v msfconsole >/dev/null || ( sudo git clone https://github.com/rapid7/metasploit-framework.git /opt/metasploit-framework && cd /opt/metasploit-framework && sudo gem install bundler && sudo bundle install && sudo ln -sf /opt/metasploit-framework/msfconsole /usr/local/bin/msfconsole )"
 
 echo "→ Cloning/updating model from $MODEL_REPO_URL…"
-debug_and_run "git -C \"$LOCAL_MODEL_DIR\" pull origin main || ( mkdir -p \"$(dirname \"$LOCAL_MODEL_DIR\")\" && git clone \"$MODEL_REPO_URL\" \"$LOCAL_MODEL_DIR\" )"
+try_catch "git -C \"$LOCAL_MODEL_DIR\" pull origin main || ( mkdir -p \"$(dirname \"$LOCAL_MODEL_DIR\")\" && git clone \"$MODEL_REPO_URL\" \"$LOCAL_MODEL_DIR\" )"
 
 echo "→ Cloning/updating Open-WebUI…"
-debug_and_run "git -C \"$HOME/tools/open-webui\" pull origin main || git clone https://github.com/open-webui/open-webui.git \"$HOME/tools/open-webui\""
+try_catch "git -C \"$HOME/tools/open-webui\" pull origin main || git clone https://github.com/open-webui/open-webui.git \"$HOME/tools/open-webui\""
 
 echo "→ Setting up Web-UI virtualenv…"
-debug_and_run "cd \"$HOME/tools/open-webui\" && python3 -m venv venv"
-debug_and_run "source \"$HOME/tools/open-webui/venv/bin/activate\" && pip install --upgrade pip && [ -f requirements.txt ] && pip install -r requirements.txt"
+try_catch "cd \"$HOME/tools/open-webui\" && python3 -m venv venv"
+try_catch "source \"$HOME/tools/open-webui/venv/bin/activate\" && pip install --upgrade pip && [ -f requirements.txt ] && pip install -r requirements.txt"
 
 echo "→ Cloning/updating hacking tools…"
 for REPO in \
@@ -69,7 +74,7 @@ for REPO in \
   "https://github.com/jekil/awesome-hacking.git" \
   "https://github.com/sherlock-project/sherlock.git"; do
   TOOL_DIR="$HOME/tools/hacking-tools/$(basename "$REPO" .git)"
-  debug_and_run "git -C \"$TOOL_DIR\" fetch --all && git -C \"$TOOL_DIR\" pull origin main || git -C \"$TOOL_DIR\" pull origin master || git clone \"$REPO\" \"$TOOL_DIR\""
+  try_catch "git -C \"$TOOL_DIR\" fetch --all && git -C \"$TOOL_DIR\" pull origin main || git -C \"$TOOL_DIR\" pull origin master || git clone \"$REPO\" \"$TOOL_DIR\""
 done
 
 # —— Build of Tool Interactions ——
@@ -80,3 +85,11 @@ echo "Hacking tools include a variety of utilities for penetration testing, web 
 echo "Metasploit Framework is a comprehensive penetration testing tool that can be integrated with other tools for advanced attacks."
 echo "System dependencies ensure that all tools have the necessary libraries and binaries."
 echo "Sherlock is added for finding usernames across social networks, enhancing social engineering capabilities."
+
+# Automatically launch the web UI
+echo "→ Launching Open-WebUI…"
+export OPEN_WEBUI_MODEL_PATH="$LOCAL_MODEL_DIR"
+cd "$HOME/tools/open-webui"
+# shellcheck source=/dev/null
+source venv/bin/activate
+python app.py &
