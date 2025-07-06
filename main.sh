@@ -1,10 +1,10 @@
-#!/usr/bin/env bash
+!/usr/bin/env bash
 set -euo pipefail
 
 # 1. System prerequisites
-# Remove any malformed Docker source list to avoid update errors
+# Remove malformed Docker source list to avoid update errors
 if [ -f "/etc/apt/sources.list.d/docker.list" ]; then
-  if ! grep -qE "^deb \[.*\] https://download\.docker\.com" /etc/apt/sources.list.d/docker.list; then
+  if ! grep -qE "^deb \[.*\] https://download\\.docker\\.com" /etc/apt/sources.list.d/docker.list; then
     echo "→ Removing malformed docker.list..."
     sudo rm /etc/apt/sources.list.d/docker.list
   fi
@@ -26,7 +26,6 @@ if ! command -v docker &>/dev/null; then
   sudo apt install -y docker-ce docker-ce-cli containerd.io
   sudo usermod -aG docker "$USER"
   echo "→ Docker installed. Applying new group membership..."
-  # Apply docker group membership without logout
   newgrp docker <<EOF
   echo "→ Docker group active."
 EOF
@@ -67,7 +66,7 @@ else
   echo "→ Ollama container already exists."
 fi
 
-# 6. Prepare Web-UI virtual environment Prepare Web-UI virtual environment
+# 6. Prepare Web-UI virtual environment
 cd "$WEBUI_DIR"
 if [ ! -d venv ]; then
   echo "→ Creating Web-UI virtualenv..."
@@ -87,78 +86,10 @@ read -p "Enter choice [1-2]: " choice
 case "$choice" in
   1)
     echo "→ Launching Dolphin CLI..."
-    sudo docker $1 -it leviathan ollama run dolphin3:latest
+    sudo docker exec -it leviathan ollama run dolphin3:latest
     ;;
   2)
-    echo "→ Starting Web UI..."
-    python app.py
-    ;;
-  *)
-    echo "Invalid choice. Exiting."
-    exit 1
-    ;;
-esac
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-# 1. System prerequisites
-echo "→ Installing system dependencies..."
-sudo apt update
-sudo apt install -y git curl python3-pip python3-venv build-essential ffmpeg
-
-# 2. Clone/update repos
-REPO_DIR="$HOME/Leviathan"
-WEBUI_DIR="$HOME/tools/open-webui"
-
-for dir in "$REPO_DIR" "$WEBUI_DIR"; do
-  url="$( [ "$dir" == "$REPO_DIR" ] \
-    && echo git@github.com:s7612f/Leviathan.git \
-    || echo https://github.com/open-webui/open-webui.git )"
-
-  if [ -d "$dir/.git" ]; then
-    echo "→ Updating $(basename "$dir")..."
-    git -C "$dir" pull origin main
-  else
-    echo "→ Cloning $(basename "$dir")..."
-    git clone "$url" "$dir"
-  fi
-done
-
-# 3. Install Ollama CLI & Dolphin model locally
-if ! command -v ollama &>/dev/null; then
-  echo "→ Installing Ollama CLI..."
-  curl -fsSL https://ollama.com/install.sh | sh
-fi
-
-echo "→ Pulling Dolphin model..."
-ollama pull dolphin-mixtral:latest
-
-# 4. Prepare Web-UI virtual environment
-cd "$WEBUI_DIR"
-if [ ! -d venv ]; then
-  echo "→ Creating Web-UI virtualenv..."
-  python3 -m venv venv
-fi
-source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-
-# 5. Interactive menu
-cat << 'EOF'
-Select interface:
- 1) Dolphin CLI (terminal)
- 2) Open-WebUI (browser)
-EOF
-read -p "Enter choice [1-2]: " choice
-
-case "$choice" in
-  1)
-    echo "→ Launching Dolphin CLI..."
-    ollama shell dolphin-mixtral:latest
-    ;;
-  2)
-    echo "→ Starting Web UI..."
+    echo "→ Starting Open-WebUI..."
     python app.py
     ;;
   *)
