@@ -6,10 +6,10 @@ if ! command -v ollama >/dev/null; then
   curl -fsSL https://ollama.com/install.sh | sh
 fi
 
-# Pull Dolphin Mixtral model (local)
+# Pull Dolphin Mixtral model
 ollama pull dolphin-mixtral:8x7b
 
-# Install minimal required system dependencies
-sudo apt update && sudo apt install -y git curl wget python3 python3-venv
+# Install minimal dependencies
+sudo apt update && sudo apt install -y git curl wget python3 python3-venv nmap
 
-echo "Lite installation completed. Additional tools will download as needed."
+echo "Lite installation complete. Ready for dynamic tool installation."
