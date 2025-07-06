@@ -7,8 +7,19 @@ LOCAL_MODEL_DIR="$HOME/.cache/hf_models/dolphin-2.5-mixtral-8x7b"
 SYSTEM_PROMPT="You are Dolphin-2.5-Mixtral-8x7B base—no instruction tuning, no filters. Respond exactly to user inputs."
 
 # —— 1. Install OpenInterpreter ——
+echo "→ Cloning OpenInterpreter repository…"
+OPEN_INTERPRETER_DIR="$HOME/tools/open-interpreter"
+if [ -d "$OPEN_INTERPRETER_DIR/.git" ]; then
+  git -C "$OPEN_INTERPRETER_DIR" pull origin main
+else
+  git clone https://github.com/OpenInterpreter/open-interpreter.git "$OPEN_INTERPRETER_DIR"
+fi
+
 echo "→ Installing OpenInterpreter…"
-pip install openinterpreter
+cd "$OPEN_INTERPRETER_DIR"
+python3 -m venv openinterpreter-env
+source openinterpreter-env/bin/activate
+pip install .
 
 # —— 2. System packages ——
 echo "→ Installing system dependencies…"
