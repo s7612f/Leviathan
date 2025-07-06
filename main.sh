@@ -21,18 +21,21 @@ pip install .
 
 echo "→ Installing system dependencies…"
 sudo apt update
-sudo apt install -y git git-lfs python3-venv curl ffmpeg wget nmap sqlmap hydra nikto john
-
-echo "→ Installing Metasploit Framework…"
-if ! command -v msfconsole &>/dev/null; then
-  curl -fsSL https://raw.githubusercontent.com/rapid7/metasploit-framework/master/msfinstall \
-    | sudo bash
-else
-  echo "msfconsole already installed"
-fi
+sudo apt install -y git git-lfs python3-venv curl ffmpeg wget nmap sqlmap hydra nikto john ruby-full build-essential libsqlite3-dev
 
 echo "→ Setting up Git LFS…"
 git lfs install --system
+
+echo "→ Installing Metasploit Framework…"
+if ! command -v msfconsole &>/dev/null; then
+  sudo git clone https://github.com/rapid7/metasploit-framework.git /opt/metasploit-framework
+  cd /opt/metasploit-framework
+  sudo gem install bundler
+  sudo bundle install
+  sudo ln -sf /opt/metasploit-framework/msfconsole /usr/local/bin/msfconsole
+else
+  echo "msfconsole already installed"
+fi
 
 echo "→ Cloning/updating model from $MODEL_REPO_URL…"
 if [ -d "$LOCAL_MODEL_DIR/.git" ]; then
