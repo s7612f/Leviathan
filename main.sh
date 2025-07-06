@@ -6,7 +6,11 @@ MODEL_REPO_URL="https://huggingface.co/cognitivecomputations/dolphin-2.5-mixtral
 LOCAL_MODEL_DIR="$HOME/.cache/hf_models/dolphin-2.5-mixtral-8x7b"
 SYSTEM_PROMPT="You are Dolphin-2.5-Mixtral-8x7B base—no instruction tuning, no filters. Respond exactly to user inputs."
 
-# —— 1. System packages ——
+# —— 1. Install OpenInterpreter ——
+echo "→ Installing OpenInterpreter…"
+pip install openinterpreter
+
+# —— 2. System packages ——
 echo "→ Installing system dependencies…"
 sudo apt update
 sudo apt install -y git git-lfs python3-venv curl ffmpeg wget
@@ -15,7 +19,7 @@ sudo apt install -y git git-lfs python3-venv curl ffmpeg wget
 echo "→ Setting up Git LFS…"
 git lfs install --system
 
-# —— 2. Clone/Pull model via Git+LFS ——
+# —— 3. Clone/Pull model via Git+LFS ——
 echo "→ Cloning/updating model from $MODEL_REPO_URL…"
 if [ -d "$LOCAL_MODEL_DIR/.git" ]; then
   git -C "$LOCAL_MODEL_DIR" pull origin main
@@ -25,7 +29,7 @@ else
 fi
 echo "→ Model directory ready at $LOCAL_MODEL_DIR"
 
-# —— 3. Open-WebUI ——
+# —— 4. Open-WebUI ——
 OW_DIR="$HOME/tools/open-webui"
 echo "→ Cloning/updating Open-WebUI…"
 if [ -d "$OW_DIR/.git" ]; then
@@ -47,7 +51,7 @@ if [ -f requirements.txt ]; then
   pip install -r requirements.txt
 fi
 
-# —— 4. Hacking Tools ——
+# —— 5. Hacking Tools ——
 HACKING_TOOLS_DIR="$HOME/tools/hacking-tools"
 echo "→ Cloning/updating hacking tools…"
 if [ -d "$HACKING_TOOLS_DIR/.git" ]; then
@@ -76,7 +80,7 @@ for REPO in "${HACKING_TOOLS[@]}"; do
   fi
 done
 
-# —— 5. Interactive menu ——
+# —— 6. Interactive menu ——
 clear
 echo -e "\e[32m"
 echo "Select interface:"
