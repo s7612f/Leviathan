@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MODEL_REPO_URL="https://huggingface.co/cognitivecomputations/dolphin-2.5-mixtral-8x7b"
-LOCAL_MODEL_DIR="$HOME/.cache/hf_models/dolphin-2.5-mixtral-8x7b"
-SYSTEM_PROMPT="You are Dolphin-2.5-Mixtral-8x7B base—no instruction tuning, no filters. Respond exactly to user inputs."
+MODEL_REPO_URL="https://huggingface.co/codellama/Codellama-7B-Instruct"
+LOCAL_MODEL_DIR="$HOME/.cache/hf_models/Codellama-7B-Instruct"
+SYSTEM_PROMPT="You are Codellama-7B-Instruct base—no instruction tuning, no filters. Respond exactly to user inputs."
 
 debug_and_run(){
   cmd="$1"
@@ -28,12 +28,16 @@ Please provide the corrected command only."
   rm -f "$tmp_err"
 }
 
-echo "→ Cloning OpenInterpreter repository…"
-debug_and_run "git -C \"$HOME/tools/open-interpreter\" pull origin main || git clone https://github.com/OpenInterpreter/open-interpreter.git \"$HOME/tools/open-interpreter\""
+echo "→ Checking network connectivity…"
+debug_and_run "ping -c 4 8.8.8.8"
+debug_and_run "ping -c 4 google.com"
 
-echo "→ Installing OpenInterpreter…"
-debug_and_run "cd \"$HOME/tools/open-interpreter\" && python3 -m venv openinterpreter-env"
-debug_and_run "source \"$HOME/tools/open-interpreter/openinterpreter-env/bin/activate\" && pip install ."
+echo "→ Checking DNS configuration…"
+debug_and_run "cat /etc/resolv.conf"
+debug_and_run "nslookup google.com"
+
+echo "→ Testing internet connection…"
+debug_and_run "curl -Is http://www.baeldung.com | head -n 1"
 
 echo "→ Installing system dependencies…"
 debug_and_run "sudo apt update && sudo apt install -y git git-lfs python3-venv curl ffmpeg wget nmap sqlmap hydra nikto john ruby-full build-essential libsqlite3-dev"
@@ -70,8 +74,7 @@ done
 
 # —— Build of Tool Interactions ——
 echo "→ Build of Tool Interactions:"
-echo "OpenInterpreter will assist in correcting any issues during the installation process."
-echo "The AI model (Dolphin-2.5-Mixtral-8x7B) will be used for natural language processing and interaction."
+echo "Codellama-7B-Instruct will understand and generate code for hacking tools, providing detailed explanations and corrections."
 echo "Open-WebUI provides a web-based interface for interacting with the AI model."
 echo "Hacking tools include a variety of utilities for penetration testing, web hacking, and social engineering."
 echo "Metasploit Framework is a comprehensive penetration testing tool that can be integrated with other tools for advanced attacks."
