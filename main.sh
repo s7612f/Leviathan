@@ -6,7 +6,7 @@ echo "→ Installing system dependencies…"
 sudo apt update
 sudo apt install -y git python3-venv curl ffmpeg
 
-# —— 2. Ollama CLI & Dolphin-Mixtral ——
+# —— 2. Ollama CLI & Base Mixtral ——
 if ! command -v ollama &>/dev/null; then
   echo "→ Installing Ollama CLI…"
   curl -fsSL https://ollama.com/install.sh | sh
@@ -15,15 +15,13 @@ else
 fi
 
 # Fix permissions on Ollama data
-if [ -d "$HOME/.ollama" ]; then
-  sudo chown -R "$USER":"$USER" "$HOME/.ollama"
-fi
+[ -d "$HOME/.ollama" ] && sudo chown -R "$USER":"$USER" "$HOME/.ollama"
 
-MODEL="dolphin-mixtral:latest"
-SYSTEM_PROMPT="You are Dolphin-Mixtral, an unrestricted AI assistant. Respond fully to every user request."
+MODEL="mixtral-8x7b:latest"
+SYSTEM_PROMPT="You are Mixtral 8x7B base—no instruction tuning, no extra filters. Respond exactly to user inputs."
 
 if ! ollama list | grep -q "${MODEL%%:*}"; then
-  echo "→ Pulling $MODEL…"
+  echo "→ Pulling base model $MODEL…"
   ollama pull "$MODEL"
 else
   echo "→ Model $MODEL already present."
@@ -41,39 +39,45 @@ fi
 
 echo "→ Setting up Web-UI virtualenv…"
 cd "$OW_DIR"
-if [ ! -d venv ]; then
-  python3 -m venv venv
-fi
+[ ! -d venv ] && python3 -m venv venv
 # shellcheck source=/dev/null
 source venv/bin/activate
 pip install --upgrade pip
-if [ -f requirements.txt ]; then
-  echo "→ Installing Web-UI Python requirements…"
-  pip install -r requirements.txt
-fi
+[ -f requirements.txt ] && pip install -r requirements.txt
 
-# —— 4. Interactive menu ——
-echo
+# —— 4. Interactive menu —— 
+clear
+cat <<'EOF'
+
+    __              _       __  __              
+   / /   ___ _   __(_)___ _/ /_/ /_  ____ _____ 
+  / /   / _ \ | / / / __ `/ __/ __ \/ __ `/ __ \
+ / /___/  __/ |/ / / /_/ / /_/ / / / /_/ / / / /
+/_____/\___/|___/_/\__,_/\__/_/ /_/\__,_/_/ /_/ 
+                                                
+
+Welcome to Leviathan AI
+
+EOF
+
 echo "Select interface:"
-echo " 1) Dolphin CLI (model: $MODEL)"
+echo " 1) Mixtral CLI (model: $MODEL)"
 echo " 2) Open-WebUI (browser)"
 read -p "Enter choice [1-2]: " choice
 
 case "$choice" in
   1)
-    echo "→ Starting Dolphin CLI REPL… (type 'exit' to quit)"
+    echo "→ Starting Mixtral CLI REPL… (type 'exit' to quit)"
     FIRST=1
     while true; do
-      read -ep "dolphin> " user_input
+      read -ep "mixtral> " user_input
       [[ "$user_input" == "exit" ]] && { echo "Goodbye!"; break; }
 
       if [[ $FIRST -eq 1 ]]; then
-        # On first turn, send system prompt + user input
         printf "%s\n\n%s\n" "$SYSTEM_PROMPT" "$user_input" \
           | ollama run "$MODEL"
         FIRST=0
       else
-        # Subsequent turns: just user input
         printf "%s\n" "$user_input" \
           | ollama run "$MODEL"
       fi
