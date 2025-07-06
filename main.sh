@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+##!/usr/bin/env bash
 set -euo pipefail
 
 # —— Configuration ——
@@ -9,7 +9,7 @@ SYSTEM_PROMPT="You are Dolphin-2.5-Mixtral-8x7B base—no instruction tuning, no
 # —— 1. System packages ——
 echo "→ Installing system dependencies…"
 sudo apt update
-sudo apt install -y git git-lfs python3-venv curl ffmpeg
+sudo apt install -y git git-lfs python3-venv curl ffmpeg wget
 
 # Initialize Git LFS
 echo "→ Setting up Git LFS…"
@@ -47,24 +47,38 @@ if [ -f requirements.txt ]; then
   pip install -r requirements.txt
 fi
 
-# —— 4. Interactive menu —— 
+# —— 4. Hacking Tools ——
+HACKING_TOOLS_DIR="$HOME/tools/hacking-tools"
+echo "→ Cloning/updating hacking tools…"
+if [ -d "$HACKING_TOOLS_DIR/.git" ]; then
+  git -C "$HACKING_TOOLS_DIR" pull origin main
+else
+  mkdir -p "$(dirname "$HACKING_TOOLS_DIR")"
+  git clone https://github.com/hellman/hacking-tools.git "$HACKING_TOOLS_DIR"
+fi
+
+# Clone additional hacking tool repositories
+HACKING_TOOLS=("https://github.com/evilgeniuslabs/hacking-tools.git" "https://github.com/blackhatpython/hacking-tools.git")
+for REPO in "${HACKING_TOOLS[@]}"; do
+  TOOL_DIR="$HACKING_TOOLS_DIR/$(basename "$REPO" .git)"
+  if [ -d "$TOOL_DIR/.git" ]; then
+    git -C "$TOOL_DIR" pull origin main
+  else
+    git clone "$REPO" "$TOOL_DIR"
+  fi
+done
+
+# —— 5. Interactive menu ——
 clear
 cat <<'EOF'
+      __              _       __  __                  / /   ___ _   __(_)___ _/ /_/ /_  ____ _____    / /   / _ \ | / / / __ `/ __/ __ \/ __ `/ __ \  / /___/  __/ |/ / / /_/ / /_/ / / / /_/ / / / / /_____/\___/|___/_/\__,_/\__/_/ /_/\__,_/_/ /_/                                                    Welcome to Leviathan AI  EOF
 
-    __              _       __  __              
-   / /   ___ _   __(_)___ _/ /_/ /_  ____ _____ 
-  / /   / _ \ | / / / __ `/ __/ __ \/ __ `/ __ \
- / /___/  __/ |/ / / /_/ / /_/ / / / /_/ / / / /
-/_____/\___/|___/_/\__,_/\__/_/ /_/\__,_/_/ /_/ 
-                                                
-
-Welcome to Leviathan AI
-
-EOF
-
+echo -e "\e[32m"
 echo "Select interface:"
 echo " 1) Mixtral CLI (model: dolphin-2.5-mixtral-8x7b)"
 echo " 2) Open-WebUI (browser)"
+echo -e "\e[0m"
+
 read -p "Enter choice [1-2]: " choice
 
 case "$choice" in
@@ -74,7 +88,6 @@ case "$choice" in
     while true; do
       read -ep "mixtral> " user_input
       [[ "$user_input" == "exit" ]] && { echo "Goodbye!"; break; }
-
       if [[ $FIRST -eq 1 ]]; then
         printf "%s\n\n%s\n" "$SYSTEM_PROMPT" "$user_input" \
           | ollama run --model-dir "$LOCAL_MODEL_DIR"
