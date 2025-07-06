@@ -55,14 +55,14 @@ echo "→ Pulling Dolphin model..."
 ollama pull dolphin-mixtral:latest
 
 # 5. Start Ollama container with pentest tools
-if ! docker ps -a --format '{{.Names}}' | grep -qw leviathan; then
+if ! sudo docker $1 -a --format '{{.Names}}' | grep -qw leviathan; then
   echo "→ Starting Ollama Docker container..."
-  docker pull ollama/ollama:latest
-  docker run -d --gpus all -p 11434:11434 --name leviathan \
+  sudo docker $1 ollama/ollama:latest
+  sudo docker $1 -d --gpus all -p 11434:11434 --name leviathan \
     -v ~/.ollama:/root/.ollama ollama/ollama:latest
   echo "→ Installing tools inside container..."
-  docker exec leviathan bash -lc "apt update && apt install -y python3-pip git nmap sqlmap hydra && pip3 install open-interpreter"
-  docker exec leviathan ollama pull dolphin3:latest
+  sudo docker $1 leviathan bash -lc "apt update && apt install -y python3-pip git nmap sqlmap hydra && pip3 install open-interpreter"
+  sudo docker $1 leviathan ollama pull dolphin3:latest
 else
   echo "→ Ollama container already exists."
 fi
@@ -87,7 +87,7 @@ read -p "Enter choice [1-2]: " choice
 case "$choice" in
   1)
     echo "→ Launching Dolphin CLI..."
-    docker exec -it leviathan ollama run dolphin3:latest
+    sudo docker $1 -it leviathan ollama run dolphin3:latest
     ;;
   2)
     echo "→ Starting Web UI..."
