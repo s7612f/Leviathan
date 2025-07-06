@@ -14,6 +14,12 @@ else
   echo "→ Ollama CLI already installed."
 fi
 
+# Ensure ~/.ollama is owned by your user (fixes history permission errors)
+if [ -d "$HOME/.ollama" ]; then
+  echo "→ Fixing permissions on ~/.ollama…"
+  sudo chown -R "$USER":"$USER" "$HOME/.ollama"
+fi
+
 if ! ollama list | grep -q "dolphin-mixtral"; then
   echo "→ Pulling Dolphin-Mixtral model…"
   ollama pull dolphin-mixtral:latest
