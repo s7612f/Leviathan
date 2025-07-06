@@ -55,19 +55,19 @@ echo "→ Pulling Dolphin model..."
 ollama pull dolphin-mixtral:latest
 
 # 5. Start Ollama container with pentest tools
-if ! sudo docker $1 -a --format '{{.Names}}' | grep -qw leviathan; then
+if ! sudo docker ps -a --format '{{.Names}}' | grep -qw leviathan; then
   echo "→ Starting Ollama Docker container..."
-  sudo docker $1 ollama/ollama:latest
-  sudo docker $1 -d --gpus all -p 11434:11434 --name leviathan \
+  sudo docker pull ollama/ollama:latest
+  sudo docker run -d --gpus all -p 11434:11434 --name leviathan \
     -v ~/.ollama:/root/.ollama ollama/ollama:latest
   echo "→ Installing tools inside container..."
-  sudo docker $1 leviathan bash -lc "apt update && apt install -y python3-pip git nmap sqlmap hydra && pip3 install open-interpreter"
-  sudo docker $1 leviathan ollama pull dolphin3:latest
+  sudo docker exec leviathan bash -lc "apt update && apt install -y python3-pip git nmap sqlmap hydra && pip3 install open-interpreter"
+  sudo docker exec leviathan ollama pull dolphin3:latest
 else
   echo "→ Ollama container already exists."
 fi
 
-# 6. Prepare Web-UI virtual environment
+# 6. Prepare Web-UI virtual environment Prepare Web-UI virtual environment
 cd "$WEBUI_DIR"
 if [ ! -d venv ]; then
   echo "→ Creating Web-UI virtualenv..."
