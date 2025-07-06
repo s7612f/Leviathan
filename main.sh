@@ -2,6 +2,14 @@
 set -euo pipefail
 
 # 1. System prerequisites
+# Remove any malformed Docker source list to avoid update errors
+if [ -f "/etc/apt/sources.list.d/docker.list" ]; then
+  if ! grep -qE "^deb \[.*\] https://download\.docker\.com" /etc/apt/sources.list.d/docker.list; then
+    echo "→ Removing malformed docker.list..."
+    sudo rm /etc/apt/sources.list.d/docker.list
+  fi
+fi
+
 echo "→ Installing system dependencies..."
 sudo apt update
 sudo apt install -y git curl python3-pip python3-venv build-essential ffmpeg \
