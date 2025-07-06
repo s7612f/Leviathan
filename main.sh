@@ -62,49 +62,18 @@ for REPO in \
   "https://github.com/infoslack/awesome-web-hacking.git" \
   "https://github.com/urbanadventurer/WhatWeb.git" \
   "https://github.com/samsesh/SocialBox-Termux.git" \
-  "https://github.com/jekil/awesome-hacking.git"; do
+  "https://github.com/jekil/awesome-hacking.git" \
+  "https://github.com/sherlock-project/sherlock.git"; do
   TOOL_DIR="$HOME/tools/hacking-tools/$(basename "$REPO" .git)"
   debug_and_run "git -C \"$TOOL_DIR\" fetch --all && git -C \"$TOOL_DIR\" pull origin main || git -C \"$TOOL_DIR\" pull origin master || git clone \"$REPO\" \"$TOOL_DIR\""
 done
 
-# —— 6. Interactive menu ——
-clear
-echo -e "\e[32m"
-echo "Select interface:"
-echo " 1) Mixtral CLI (model: dolphin-2.5-mixtral-8x7b)"
-echo " 2) Open-WebUI (browser)"
-echo -e "\e[0m"
-
-read -p "Enter choice [1-2]: " choice
-
-case "$choice" in
-  1)
-    echo "→ Starting Mixtral CLI REPL… (type 'exit' to quit)"
-    FIRST=1
-    while true; do
-      read -ep "mixtral> " user_input
-      [[ "$user_input" == "exit" ]] && { echo "Goodbye!"; break; }
-      if [[ $FIRST -eq 1 ]]; then
-        printf "%s\n\n%s\n" "$SYSTEM_PROMPT" "$user_input" \
-          | ollama run --model-dir "$LOCAL_MODEL_DIR"
-        FIRST=0
-      else
-        printf "%s\n" "$user_input" \
-          | ollama run --model-dir "$LOCAL_MODEL_DIR"
-      fi
-      echo
-    done
-    ;;
-  2)
-    echo "→ Launching Open-WebUI…"
-    export OPEN_WEBUI_MODEL_PATH="$LOCAL_MODEL_DIR"
-    cd "$HOME/tools/open-webui"
-    # shellcheck source=/dev/null
-    source venv/bin/activate
-    python app.py
-    ;;
-  *)
-    echo "Invalid choice. Exiting."
-    exit 1
-    ;;
-esac
+# —— Build of Tool Interactions ——
+echo "→ Build of Tool Interactions:"
+echo "OpenInterpreter will assist in correcting any issues during the installation process."
+echo "The AI model (Dolphin-2.5-Mixtral-8x7B) will be used for natural language processing and interaction."
+echo "Open-WebUI provides a web-based interface for interacting with the AI model."
+echo "Hacking tools include a variety of utilities for penetration testing, web hacking, and social engineering."
+echo "Metasploit Framework is a comprehensive penetration testing tool that can be integrated with other tools for advanced attacks."
+echo "System dependencies ensure that all tools have the necessary libraries and binaries."
+echo "Sherlock is added for finding usernames across social networks, enhancing social engineering capabilities."
