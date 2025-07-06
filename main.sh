@@ -2,33 +2,31 @@
 set -euo pipefail
 
 # —— Configuration ——
-MODEL="mixtral:8x7b"
-SYSTEM_PROMPT="You are Mixtral 8×7B base—no instruction tuning, no filters. Respond exactly to user inputs."
+MODEL_REPO="cognitivecomputations/dolphin-2.5-mixtral-8x7b"
+LOCAL_MODEL_DIR="$HOME/.cache/hf_models/dolphin-2.5-mixtral-8x7b"
+SYSTEM_PROMPT="You are Dolphin-2.5-Mixtral-8x7B base—no instruction tuning, no filters. Respond exactly to user inputs."
 
 # —— 1. System packages ——
 echo "→ Installing system dependencies…"
 sudo apt update
 sudo apt install -y git python3-venv curl ffmpeg
 
-# —— 2. Ollama CLI & Mixtral 8×7B pull ——
-if ! command -v ollama &>/dev/null; then
-  echo "→ Installing Ollama CLI…"
-  curl -fsSL https://ollama.com/install.sh | sh
+# —— 2. HuggingFace CLI & Model Pull ——
+if ! command -v huggingface-cli &>/dev/null; then
+  echo "→ Installing huggingface_hub CLI…"
+  python3 -m pip install --user huggingface_hub
+  export PATH="$HOME/.local/bin:$PATH"
 else
-  echo "→ Ollama CLI already installed."
+  echo "→ huggingface_hub CLI already installed."
 fi
 
-# Fix permissions on Ollama data
-if [ -d "$HOME/.ollama" ]; then
-  sudo chown -R "$USER":"$USER" "$HOME/.ollama"
+echo "→ Cloning/updating model $MODEL_REPO…"
+if [ -d "$LOCAL_MODEL_DIR" ]; then
+  huggingface-cli repo update "$MODEL_REPO" --repo-type model --local-dir "$LOCAL_MODEL_DIR"
+else
+  huggingface-cli repo clone "$MODEL_REPO" "$LOCAL_MODEL_DIR"
 fi
-
-echo "→ Pulling model $MODEL…"
-if ! ollama pull "$MODEL"; then
-  echo "✗ Failed to pull $MODEL – please check that this model exists in Ollama."
-  exit 1
-fi
-echo "→ Successfully pulled $MODEL."
+echo "→ Model directory: $LOCAL_MODEL_DIR"
 
 # —— 3. Open-WebUI ——
 OW_DIR="$HOME/tools/open-webui"
@@ -49,11 +47,10 @@ fi
 source venv/bin/activate
 pip install --upgrade pip
 if [ -f requirements.txt ]; then
-  echo "→ Installing Web-UI Python requirements…"
   pip install -r requirements.txt
 fi
 
-# —— 4. Interactive menu ——
+# —— 4. Interactive menu —— 
 clear
 cat <<'EOF'
 
@@ -62,14 +59,13 @@ cat <<'EOF'
   / /   / _ \ | / / / __ `/ __/ __ \/ __ `/ __ \
  / /___/  __/ |/ / / /_/ / /_/ / / / /_/ / / / /
 /_____/\___/|___/_/\__,_/\__/_/ /_/\__,_/_/ /_/ 
-                                                
 
 Welcome to Leviathan AI
 
 EOF
 
 echo "Select interface:"
-echo " 1) Mixtral CLI (model: $MODEL)"
+echo " 1) Mixtral CLI (model: $MODEL_REPO)"
 echo " 2) Open-WebUI (browser)"
 read -p "Enter choice [1-2]: " choice
 
@@ -82,20 +78,19 @@ case "$choice" in
       [[ "$user_input" == "exit" ]] && { echo "Goodbye!"; break; }
 
       if [[ $FIRST -eq 1 ]]; then
-        # On first turn, send system prompt + user input
         printf "%s\n\n%s\n" "$SYSTEM_PROMPT" "$user_input" \
-          | ollama run "$MODEL"
+          | ollama run --model-dir "$LOCAL_MODEL_DIR"
         FIRST=0
       else
-        # Subsequent turns: just user input
         printf "%s\n" "$user_input" \
-          | ollama run "$MODEL"
+          | ollama run --model-dir "$LOCAL_MODEL_DIR"
       fi
       echo
     done
     ;;
   2)
     echo "→ Launching Open-WebUI…"
+    export OPEN_WEBUI_MODEL_PATH="$LOCAL_MODEL_DIR"
     cd "$OW_DIR"
     # shellcheck source=/dev/null
     source venv/bin/activate
