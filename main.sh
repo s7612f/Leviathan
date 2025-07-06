@@ -21,7 +21,14 @@ pip install .
 
 echo "→ Installing system dependencies…"
 sudo apt update
-sudo apt install -y git git-lfs python3-venv curl ffmpeg wget nmap sqlmap hydra nikto john metasploit-framework
+sudo apt install -y git git-lfs python3-venv curl ffmpeg wget nmap sqlmap hydra nikto john
+
+echo "→ Installing Metasploit Framework…"
+if ! command -v msfconsole &>/dev/null; then
+  curl https://raw.githubusercontent.com/rapid7/metasploit-framework/master/msfinstall | sudo bash
+else
+  echo "msfconsole already installed"
+fi
 
 echo "→ Setting up Git LFS…"
 git lfs install --system
