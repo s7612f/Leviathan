@@ -1,66 +1,66 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-# —— 1. System packages ——
-echo "→ Installing system dependencies…"
-sudo apt update
-sudo apt install -y git python3-venv build-essential ffmpeg curl
+# Main interactive installer and runner for Leviathan
 
-# —— 2. Ollama & Dolphin-Mixtral ——
-# Check for Ollama CLI
-if ! command -v ollama >/dev/null; then
-  echo "→ Ollama not found. Installing Ollama…"
-  curl -fsSL https://ollama.com/install.sh | sh
-else
-  echo "→ Ollama is already installed."
-fi
+echo "Select action:"
+echo " 1) Install all components (Docker, Ollama, Dolphin, Leviathan & Open-WebUI)"
+echo " 2) Launch Dolphin CLI"
+echo " 3) Launch Open-WebUI"
+read -p "Enter choice [1-3]: " action
 
-# Check for Dolphin-Mixtral model
-# Check for Dolphin-Mixtral model
-if ! ollama list | grep -q "dolphin-mixtral"; then
-  echo "→ Dolphin-Mixtral model not found. Pulling dolphin-mixtral:latest…"
-  ollama pull dolphin-mixtral:latest
-else
-  echo "→ Dolphin-Mixtral model already present."
-fi
+case "$action" in
+  1)
+    # —— Install Docker & dependencies ——
+    echo "→ Installing Docker and dependencies..."
+    sudo apt update
+    sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release git python3-pip python3-venv build-essential ffmpeg
 
-# —— 3. Leviathan repo ——
-LEVIATHAN_DIR="$HOME/Leviathan"
-if [ -d "$LEVIATHAN_DIR/.git" ]; then
-  echo "→ Updating Leviathan repo…"
-  git -C "$LEVIATHAN_DIR" pull origin main
-else
-  echo "→ Cloning Leviathan repo…"
-  git clone https://github.com/s7612f/Leviathan.git "$LEVIATHAN_DIR"
-fi
+    # Docker setup
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+      | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] \
+       https://download.docker.com/linux/ubuntu \
+       $(lsb_release -cs) stable" \
+      | sudo tee /etc/apt/sources.list.d/docker.list
+    sudo apt update
+    sudo apt install -y docker-ce docker-ce-cli containerd.io
+    sudo usermod -aG docker "$USER"
 
-# —— 4. Open-WebUI setup ——
-OW_DIR="$HOME/tools/open-webui"
-if [ -d "$OW_DIR/.git" ]; then
-  echo "→ Updating Open-WebUI…"
-  git -C "$OW_DIR" pull origin main
-else
-  echo "→ Cloning Open-WebUI…"
-  mkdir -p "$(dirname "$OW_DIR")"
-  git clone https://github.com/open-webui/open-webui.git "$OW_DIR"
-fi
+    # Pull & start the Ollama container
+    echo "→ Pulling and starting Ollama container..."
+    docker pull ollama/ollama:latest
+    docker run -d --gpus all -p 11434:11434 --name leviathan -v ~/.ollama:/root/.ollama ollama/ollama:latest
 
-echo "→ Setting up Python venv for Open-WebUI…"
-cd "$OW_DIR"
-if [ ! -d "venv" ]; then
-  python3 -m venv venv
-fi
-# shellcheck source=/dev/null
-source venv/bin/activate
-pip install --upgrade pip
-if [ -f "requirements.txt" ]; then
-  pip install -r requirements.txt
-else
-  echo "→ requirements.txt not found; skipping Python dependencies installation."
-fi
+    # Install pentest tools & Open Interpreter
+    echo "→ Installing pentest tools in container..."
+    docker exec leviathan bash -lc "apt update && apt install -y python3-pip git nmap sqlmap hydra && pip3 install open-interpreter"
 
-echo
-echo "✅  Bootstrap complete!"
-echo "   • Leviathan at:    $LEVIATHAN_DIR"
-echo "   • Open-WebUI at:   $OW_DIR"
-echo "   • Dolphin-Mixtral installed:   $(ollama list | grep dolphin-mixtral || echo 'none')"
+    # Pull Dolphin model
+    echo "→ Pulling Dolphin model in container..."
+    docker exec leviathan ollama pull dolphin3:latest
+
+    echo "✅  Installation complete."
+    ;;
+
+  2)
+    echo "→ Launching Dolphin CLI..."
+    docker exec -it leviathan ollama run dolphin3:latest
+    ;;
+
+  3)
+    echo "→ Starting Open-WebUI..."
+    cd "$HOME/tools/open-webui"
+    if [ ! -d "venv" ]; then
+      python3 -m venv venv
+    fi
+    source venv/bin/activate
+    python app.py
+    ;;
+
+  *)
+    echo "Invalid choice. Exiting."
+    exit 1
+    ;;
+esac
