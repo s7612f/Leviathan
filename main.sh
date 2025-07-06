@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# —— Configuration ——
+MODEL="mixtral-8x7b:latest"
+SYSTEM_PROMPT="You are Mixtral 8×7B base—no instruction tuning, no filters. Respond exactly to user inputs."
+
 # —— 1. System packages ——
 echo "→ Installing system dependencies…"
 sudo apt update
 sudo apt install -y git python3-venv curl ffmpeg
 
-# —— 2. Ollama CLI & Base Mixtral ——
+# —— 2. Ollama CLI & Mixtral 8×7B pull ——
 if ! command -v ollama &>/dev/null; then
   echo "→ Installing Ollama CLI…"
   curl -fsSL https://ollama.com/install.sh | sh
@@ -15,17 +19,16 @@ else
 fi
 
 # Fix permissions on Ollama data
-[ -d "$HOME/.ollama" ] && sudo chown -R "$USER":"$USER" "$HOME/.ollama"
-
-MODEL="mixtral-8x7b:latest"
-SYSTEM_PROMPT="You are Mixtral 8x7B base—no instruction tuning, no extra filters. Respond exactly to user inputs."
-
-if ! ollama list | grep -q "${MODEL%%:*}"; then
-  echo "→ Pulling base model $MODEL…"
-  ollama pull "$MODEL"
-else
-  echo "→ Model $MODEL already present."
+if [ -d "$HOME/.ollama" ]; then
+  sudo chown -R "$USER":"$USER" "$HOME/.ollama"
 fi
+
+echo "→ Pulling model $MODEL…"
+if ! ollama pull "$MODEL"; then
+  echo "✗ Failed to pull $MODEL – please check that this model exists in Ollama."
+  exit 1
+fi
+echo "→ Successfully pulled $MODEL."
 
 # —— 3. Open-WebUI ——
 OW_DIR="$HOME/tools/open-webui"
@@ -39,13 +42,18 @@ fi
 
 echo "→ Setting up Web-UI virtualenv…"
 cd "$OW_DIR"
-[ ! -d venv ] && python3 -m venv venv
+if [ ! -d venv ]; then
+  python3 -m venv venv
+fi
 # shellcheck source=/dev/null
 source venv/bin/activate
 pip install --upgrade pip
-[ -f requirements.txt ] && pip install -r requirements.txt
+if [ -f requirements.txt ]; then
+  echo "→ Installing Web-UI Python requirements…"
+  pip install -r requirements.txt
+fi
 
-# —— 4. Interactive menu —— 
+# —— 4. Interactive menu ——
 clear
 cat <<'EOF'
 
@@ -74,10 +82,12 @@ case "$choice" in
       [[ "$user_input" == "exit" ]] && { echo "Goodbye!"; break; }
 
       if [[ $FIRST -eq 1 ]]; then
+        # On first turn, send system prompt + user input
         printf "%s\n\n%s\n" "$SYSTEM_PROMPT" "$user_input" \
           | ollama run "$MODEL"
         FIRST=0
       else
+        # Subsequent turns: just user input
         printf "%s\n" "$user_input" \
           | ollama run "$MODEL"
       fi
