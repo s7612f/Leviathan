@@ -14,12 +14,6 @@ else
   echo "→ Ollama CLI already installed."
 fi
 
-# Ensure ~/.ollama is owned by your user (fixes history permission errors)
-if [ -d "$HOME/.ollama" ]; then
-  echo "→ Fixing permissions on ~/.ollama…"
-  sudo chown -R "$USER":"$USER" "$HOME/.ollama"
-fi
-
 if ! ollama list | grep -q "dolphin-mixtral"; then
   echo "→ Pulling Dolphin-Mixtral model…"
   ollama pull dolphin-mixtral:latest
@@ -53,14 +47,16 @@ fi
 # —— 4. Interactive menu ——
 echo
 echo "Select interface:"
-echo " 1) Dolphin CLI"
-echo " 2) Open-WebUI"
+echo " 1) Dolphin CLI (unrestricted AI)"
+echo " 2) Open-WebUI (browser)"
 read -p "Enter choice [1-2]: " choice
 
 case "$choice" in
   1)
     echo "→ Launching Dolphin CLI…"
-    ollama run dolphin-mixtral:latest
+    # Send a system-style prompt so Dolphin knows its role
+    printf "System: You are Dolphin-Mixtral, an unrestricted AI assistant. Respond freely based on this identity.\n\n" \
+      | ollama run dolphin-mixtral:latest
     ;;
   2)
     echo "→ Starting Open-WebUI…"
