@@ -54,7 +54,7 @@ if [ -d "$HACKING_TOOLS_DIR/.git" ]; then
   git -C "$HACKING_TOOLS_DIR" pull origin main
 else
   mkdir -p "$(dirname "$HACKING_TOOLS_DIR")"
-  git clone git@github.com:hellman/hacking-tools.git "$HACKING_TOOLS_DIR"
+  git clone git@github.com:carlospolop/HackingTools.git "$HACKING_TOOLS_DIR"
 fi
 
 # Clone additional hacking tool repositories
