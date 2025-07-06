@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # —— Configuration ——
-MODEL="mixtral-8x7b:latest"
+MODEL="mixtral:8x7b"
 SYSTEM_PROMPT="You are Mixtral 8×7B base—no instruction tuning, no filters. Respond exactly to user inputs."
 
 # —— 1. System packages ——
