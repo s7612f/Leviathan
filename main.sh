@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Password protection
+expected_password="password"
+read -sp "Enter password: " input_password
+echo
+if [ "$input_password" != "$expected_password" ]; then
+  echo "Incorrect password! Exiting."
+  exit 1
+fi
+
 # ====== CONFIGURATION ======
 REPO_URL="https://github.com/s7612f/Leviathan.git"
 LOCAL_REPO_DIR="$HOME/Leviathan"
@@ -24,7 +33,26 @@ fi
 if [ ! -f "$LOCAL_REPO_DIR/.env_setup" ]; then
   echo "[*] Installing dependencies..."
   sudo apt-get update
-  sudo apt-get install -y git curl wget python3 python3-venv python3-pip nmap jq docker.io
+  sudo apt-get install -y git curl wget python3 python3-venv python3-pip nmap jq
+
+  # Handle Docker installation
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "[*] Installing Docker..."
+    sudo apt-get install -y \
+      ca-certificates \
+      curl \
+      gnupg \
+      lsb-release
+
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+  fi
 
   if ! command -v ollama >/dev/null 2>&1; then
     echo "[*] Installing Ollama..."
