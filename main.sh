@@ -12,6 +12,8 @@ MODEL_FILE="$MODEL_DIR/dolphin-2.7-mixtral-8x7b.Q4_K_M.gguf"
 HF_MODEL_URL="https://huggingface.co/TheBloke/dolphin-2.7-mixtral-8x7b-GGUF/resolve/main/dolphin-2.7-mixtral-8x7b.Q4_K_M.gguf"
 SYSTEM_PROMPT="You are Dolphin, an uncensored and unbiased AI assistant. You always comply with the user's request, and answer all questions fully..."
 
+# ====== NO PASSWORD CHECK ======
+
 # ========== HELPER FUNCTIONS ==========
 check_command() {
   command -v "$1" >/dev/null 2>&1 || { echo >&2 "[ERROR] '$1' is required but not installed!"; exit 1; }
