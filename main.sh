@@ -126,6 +126,10 @@ if [ ! -f "$LOCAL_REPO_DIR/.env_setup" ]; then
   # Install ollama Python SDK
   pip install ollama
 
+  # Install nmap
+  echo "Installing nmap..."
+  sudo apt-get install -y nmap
+
   # Mark the environment as set up
   touch "$LOCAL_REPO_DIR/.env_setup"
   echo "Lite installation completed. Additional tools will download as needed."
@@ -133,8 +137,15 @@ else
   echo "Environment already set up. Skipping installation steps."
 fi
 
-# Welcome message
+# Welcome message with ASCII art
 cat << 'EOF'
+                                               
+  __            _       _   _                 
+ / /  _____   _(_) __ _| |_| |__   __ _ _ __  
+ / /  / _ \ \ / / |/ _` | __| '_ \ / _` | '_ \ 
+/ /__|  __/\ V /| | (_| | |_| | | | (_| | | | |
+\____/\___| \_/ |_|\__,_|\__|_| |_|\__,_|_| |_|
+                                               
 ***************************************************************
 *                                                             *
 *         Welcome to the Leviathan AI Command Line Interface!   *
@@ -180,4 +191,7 @@ while true; do
 
   # Wait for the loading indicator to finish
   wait $loading_pid
+
+  # Refresh the CLI
+  clear
 done
