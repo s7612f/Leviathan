@@ -107,22 +107,6 @@ EOF
 # Make the Python script executable
 chmod +x $LOCAL_REPO_DIR/mixtral_bridge.py
 
-# Welcome message
-cat << 'EOF'
-***************************************************************
-*                                                             *
-*         Welcome to the Leviathan AI Command Line Interface!   *
-*                                                             *
-*   This interface allows you to interact with Mixtral, an     *
-*   advanced AI model, to perform a variety of tasks.         *
-*                                                             *
-*   Type 'help' for a list of available commands.             *
-*                                                             *
-*   To exit, simply type 'exit' or 'quit'.                   *
-*                                                             *
-***************************************************************
-EOF
-
 # Check if the environment is already set up
 if [ ! -f "$LOCAL_REPO_DIR/.env_setup" ]; then
   # Install Ollama if not installed
@@ -149,11 +133,51 @@ else
   echo "Environment already set up. Skipping installation steps."
 fi
 
+# Welcome message
+cat << 'EOF'
+***************************************************************
+*                                                             *
+*         Welcome to the Leviathan AI Command Line Interface!   *
+*                                                             *
+*   This interface allows you to interact with Mixtral, an     *
+*   advanced AI model, to perform a variety of tasks.         *
+*                                                             *
+*   Type 'help' for a list of available commands.             *
+*                                                             *
+*   To exit, simply type 'exit' or 'quit'.                   *
+*                                                             *
+***************************************************************
+EOF
+
+# Loading indicator function
+loading_indicator() {
+  local duration=$1
+  local delay=0.1
+  local spins=('|' '/' '-' '\\')
+  local i=0
+  local start=$(date +%s)
+
+  while [ $(($(date +%s) - start)) -lt duration ]; do
+    i=$(( (i+1) % 4 ))
+    echo -ne "\rLoading${spins[$i]}"
+    sleep $delay
+  done
+  echo
+}
+
 # Interactive loop to continuously accept commands
 while true; do
   read -rp "Enter command (or type 'exit'): " user_input
   if [[ $user_input == "exit" || $user_input == "quit" ]]; then
     break
   fi
+
+  # Show loading indicator while processing
+  loading_indicator 3 &
+  loading_pid=$!
+
   python3 $LOCAL_REPO_DIR/mixtral_bridge.py
+
+  # Wait for the loading indicator to finish
+  wait $loading_pid
 done
