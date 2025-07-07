@@ -126,9 +126,27 @@ pip install ollama
 
 echo "Lite installation completed. Additional tools will download as needed."
 
+# Welcome message
+cat << 'EOF'
+***************************************************************
+*                                                             *
+*         Welcome to the Leviathan AI Command Line Interface!   *
+*                                                             *
+*   This interface allows you to interact with Mixtral, an     *
+*   advanced AI model, to perform a variety of tasks.         *
+*                                                             *
+*   Type 'help' for a list of available commands.             *
+*                                                             *
+*   To exit, simply type 'exit' or 'quit'.                   *
+*                                                             *
+***************************************************************
+EOF
+
 # Interactive loop to continuously accept commands
 while true; do
   read -rp "Enter command (or type 'exit'): " user_input
-  [[ $user_input == "exit" ]] && break
+  if [[ $user_input == "exit" || $user_input == "quit" ]]; then
+    break
+  fi
   python3 $LOCAL_REPO_DIR/mixtral_bridge.py
 done
