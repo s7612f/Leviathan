@@ -72,6 +72,7 @@ cat << 'EOF' > $LOCAL_REPO_DIR/mixtral_bridge.py
 import subprocess
 import json
 import ollama
+import requests
 
 def ask_mixtral(prompt):
     try:
@@ -86,6 +87,17 @@ def execute_command(command):
     try:
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
         return result.stdout or result.stderr
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+def get_real_time_info(query):
+    try:
+        search_url = "https://www.google.com/search?q=" + query
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+        }
+        response = requests.get(search_url, headers=headers)
+        return response.text
     except Exception as e:
         return f"Error: {str(e)}"
 
