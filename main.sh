@@ -90,7 +90,7 @@ def execute_command(command):
         return f"Error: {str(e)}"
 
 while True:
-    user_input = input("\nYou: ")
+    user_input = input("\nEnter your command: ")
 
     if user_input.lower() in ['exit', 'quit']:
         break
@@ -107,25 +107,6 @@ EOF
 # Make the Python script executable
 chmod +x $LOCAL_REPO_DIR/mixtral_bridge.py
 
-# Install Ollama if not installed
-if ! command -v ollama >/dev/null; then
-  echo "Installing Ollama..."
-  curl -fsSL https://ollama.com/install.sh | sh
-fi
-
-# Pull the Mixtral model (local)
-echo "Pulling the Mixtral model..."
-ollama pull mixtral
-
-# Install minimal required system dependencies
-echo "Updating package lists and installing dependencies..."
-sudo apt update && sudo apt install -y git curl wget python3 python3-venv
-
-# Install ollama Python SDK
-pip install ollama
-
-echo "Lite installation completed. Additional tools will download as needed."
-
 # Welcome message
 cat << 'EOF'
 ***************************************************************
@@ -141,6 +122,32 @@ cat << 'EOF'
 *                                                             *
 ***************************************************************
 EOF
+
+# Check if the environment is already set up
+if [ ! -f "$LOCAL_REPO_DIR/.env_setup" ]; then
+  # Install Ollama if not installed
+  if ! command -v ollama >/dev/null; then
+    echo "Installing Ollama..."
+    curl -fsSL https://ollama.com/install.sh | sh
+  fi
+
+  # Pull the Mixtral model (local)
+  echo "Pulling the Mixtral model..."
+  ollama pull mixtral
+
+  # Install minimal required system dependencies
+  echo "Updating package lists and installing dependencies..."
+  sudo apt update && sudo apt install -y git curl wget python3 python3-venv
+
+  # Install ollama Python SDK
+  pip install ollama
+
+  # Mark the environment as set up
+  touch "$LOCAL_REPO_DIR/.env_setup"
+  echo "Lite installation completed. Additional tools will download as needed."
+else
+  echo "Environment already set up. Skipping installation steps."
+fi
 
 # Interactive loop to continuously accept commands
 while true; do
