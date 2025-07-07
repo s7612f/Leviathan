@@ -74,10 +74,13 @@ import json
 import ollama
 
 def ask_mixtral(prompt):
-    response = ollama.chat(model='mixtral', messages=[
-        {'role': 'user', 'content': prompt}
-    ])
-    return response['message']['content']
+    try:
+        response = ollama.chat(model='mixtral', messages=[
+            {'role': 'user', 'content': prompt}
+        ])
+        return response['message']['content']
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 def execute_command(command):
     try:
@@ -110,9 +113,9 @@ if ! command -v ollama >/dev/null; then
   curl -fsSL https://ollama.com/install.sh | sh
 fi
 
-# Pull Dolphin Mixtral model (local)
-echo "Pulling Dolphin Mixtral model..."
-ollama pull dolphin-mixtral:8x7b
+# Pull the Mixtral model (local)
+echo "Pulling the Mixtral model..."
+ollama pull mixtral
 
 # Install minimal required system dependencies
 echo "Updating package lists and installing dependencies..."
